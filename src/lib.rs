@@ -18,8 +18,9 @@
 //! it was the name or the password that was wrong.
 
 use authenticate::store::CredentialStore;
-use authenticate::{AuthenticateError, Authenticator, Presented};
+use authenticate::{AuthenticateError, Authenticator};
 use context::Verified;
+use identify::Presented;
 use identify::evidence::{self, PASSWORD};
 use xcore::{Mechanism, mechanism};
 
