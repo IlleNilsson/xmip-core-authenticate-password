@@ -20,10 +20,8 @@
 use authenticate::store::CredentialStore;
 use authenticate::{AuthenticateError, Authenticator, Presented};
 use context::Verified;
+use identify::evidence::{self, PASSWORD};
 use xcore::{Mechanism, mechanism};
-
-/// The proof name this verifier reads off a `Presented`.
-pub const PROOF: &str = "password";
 
 /// Verifies a `username` claim with a `password` proof against a store.
 pub struct PasswordAuthenticator {
@@ -62,9 +60,9 @@ impl Authenticator for PasswordAuthenticator {
                 presented.mechanism.name()
             )));
         }
-        let password = presented.proof(PROOF).ok_or_else(|| {
+        let password = presented.proof(evidence::PASSWORD).ok_or_else(|| {
             AuthenticateError::new(format!(
-                "no '{PROOF}' proof was presented with the username '{}'",
+                "no '{PASSWORD}' proof was presented with the username '{}'",
                 presented.value
             ))
         })?;
@@ -93,7 +91,7 @@ mod tests {
     }
 
     fn claim(username: &str, password: &str) -> Presented {
-        Presented::passed(mechanism::username(), username).with_proof(PROOF, password)
+        Presented::passed(mechanism::username(), username).with_proof(evidence::PASSWORD, password)
     }
 
     #[test]
@@ -105,8 +103,8 @@ mod tests {
             Verified::Proven
         );
         // A claim the first gate already filed under this mechanism reads too.
-        let filed =
-            Presented::passed(mechanism::password(), "bob").with_proof(PROOF, "correct horse");
+        let filed = Presented::passed(mechanism::password(), "bob")
+            .with_proof(evidence::PASSWORD, "correct horse");
         assert_eq!(
             verifier().verify(&filed).expect("verified"),
             Verified::Proven
@@ -168,14 +166,16 @@ mod tests {
     fn through_the_gate_a_proven_password_resolves_to_its_party() {
         let verifier = verifier();
         let acceptance = Acceptance::closed().accepting(&mechanism::password());
-        let filed = Presented::passed(mechanism::password(), "alice").with_proof(PROOF, "pencil");
+        let filed = Presented::passed(mechanism::password(), "alice")
+            .with_proof(evidence::PASSWORD, "pencil");
         let identity =
             authenticate(&acceptance, &[&verifier], &Registry, &filed).expect("accepted");
         assert_eq!(identity.party_id, Some(PartyId::new(7)));
         assert_eq!(identity.verified, Verified::Proven);
         assert!(identity.evidence.is_empty());
 
-        let wrong = Presented::passed(mechanism::password(), "alice").with_proof(PROOF, "pen");
+        let wrong =
+            Presented::passed(mechanism::password(), "alice").with_proof(evidence::PASSWORD, "pen");
         assert_eq!(
             authenticate(&acceptance, &[&verifier], &Registry, &wrong).expect_err("refused"),
             Refusal::NotProven {
