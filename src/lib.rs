@@ -161,7 +161,7 @@ mod tests {
             authenticate(&acceptance, &[&verifier], &Registry, &filed).expect("accepted");
         assert_eq!(identity.party_id, Some(PartyId::new(7)));
         assert_eq!(identity.verified, Verified::Proven);
-        assert!(identity.evidence.is_empty());
+        assert_eq!(identity.evidence, [] as [(String, String); 0]);
 
         let wrong =
             Presented::passed(mechanism::password(), "alice").with_proof(evidence::PASSWORD, "pen");
