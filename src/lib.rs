@@ -10,7 +10,7 @@
 //! and never on the record. This gate takes that claim, or one already named
 //! `password`, and asks the store. The store is the capability's
 //! `authenticate::store::CredentialStore`, so that `basic`, `digest` and
-//! `scram` verify against the same enrolments without any of them depending
+//! `scram` verify against the same enrollments without any of them depending
 //! on this crate (ADR-0044).
 //!
 //! Proven, or refused with the reason: no proof, another mechanism's claim,
@@ -35,7 +35,7 @@ impl PasswordAuthenticator {
         Self { store }
     }
 
-    /// The enrolments this verifies against.
+    /// The enrollments this verifies against.
     #[must_use]
     pub fn store(&self) -> &CredentialStore {
         &self.store
