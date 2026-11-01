@@ -40,6 +40,19 @@ impl PasswordAuthenticator {
     pub fn store(&self) -> &CredentialStore {
         &self.store
     }
+
+    /// Whether `user` with `secret` is proven: this gate's own verdict on
+    /// the `password` claim a login makes. What a server that logs a client
+    /// in is handed as its check (`net::login::Check`) — Xmip's SSH and FTP
+    /// servers link no authenticator — so a far end proves a password the
+    /// one way a Receive Location's gate does.
+    #[must_use]
+    pub fn admits(&self, user: &str, secret: &str) -> bool {
+        let claim =
+            Presented::passed(mechanism::password(), user).with_proof(evidence::PASSWORD, secret);
+        self.verify(&claim)
+            .is_ok_and(|verified| verified == Verified::Proven)
+    }
 }
 
 impl Authenticator for PasswordAuthenticator {
@@ -113,6 +126,15 @@ mod tests {
                 .expect("verified"),
             Verified::Refused
         );
+    }
+
+    #[test]
+    fn a_login_is_admitted_on_the_gates_own_verdict_alone() {
+        let verifier = verifier();
+        assert!(verifier.admits("alice", "pencil"));
+        assert!(!verifier.admits("alice", "pen"), "a wrong password");
+        assert!(!verifier.admits("mallory", "pencil"), "an unknown name");
+        assert!(!verifier.admits("", ""), "no one");
     }
 
     #[test]
